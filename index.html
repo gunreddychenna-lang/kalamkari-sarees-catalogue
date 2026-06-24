@@ -9,12 +9,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
     <header class="main-header">
         <div class="header-container">
-            <h1>Kalamkari Sarees</h1>
+            <div>
+                <h1>Kalamkari Sarees</h1>
+                <div class="hero-copy">
+                    <div class="hero-badges">
+                        <span>Pure Silk</span>
+                        <span>Artisan Made</span>
+                        <span>Fast Shipping</span>
+                    </div>
+                </div>
+            </div>
             <div class="header-actions">
                 <button id="view-wishlist-btn" class="wishlist-trigger">
                     Wishlist (<span id="wishlist-count">0</span>)
@@ -24,27 +33,7 @@
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="Search fabric, code, price...">
         </div>
-        <div class="category-filters">
-            <button class="filter-btn active" data-filter="all">
-                <span class="filter-title">ALL SAREES</span>
-            </button>
-            <button class="filter-btn" data-filter="pure kanchipuram silk">
-                <span class="filter-title">PURE KANCHIPURAM SILK</span>
-                <span class="filter-price" id="price-kanchipuram">Loading...</span>
-            </button>
-            <button class="filter-btn" data-filter="pure ikkat  silk">
-                <span class="filter-title">PURE IKKAT SILK</span>
-                <span class="filter-price" id="price-ikkat">Loading...</span>
-            </button>
-            <button class="filter-btn" data-filter="pure gadwal silk">
-                <span class="filter-title">PURE GADWAL SILK</span>
-                <span class="filter-price" id="price-gadwal">Loading...</span>
-            </button>
-            <button class="filter-btn" data-filter="pure tussar silk">
-                <span class="filter-title">PURE TUSSAR SILK</span>
-                <span class="filter-price" id="price-tussar">Loading...</span>
-            </button>
-        </div>
+        <div id="category-filters" class="category-filters"></div>
     </header>
 
     <main class="container">
@@ -127,10 +116,19 @@
         </section>
     </main>
 
+    <div id="image-overlay" class="image-overlay hidden" role="dialog" aria-modal="true">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <button id="overlay-close" class="overlay-close" aria-label="Close image overlay">×</button>
+            <img id="overlay-image" alt="Zoomed Saree Image">
+            <span class="overlay-hint">Click image to zoom, move mouse to pan, Esc to close.</span>
+        </div>
+    </div>
+
     <footer class="main-footer">
         <p>&copy; 2026 Kalamkari Sarees. All rights reserved.</p>
     </footer>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>

@@ -6,5 +6,21 @@
   "scripts": {
     "dev": "python -m http.server 8000",
     "start": "python -m http.server 8000"
+  },
+  "main": "script.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gunreddychenna-lang/kalamkari-sarees-catalogue.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gunreddychenna-lang/kalamkari-sarees-catalogue/issues"
+  },
+  "homepage": "https://github.com/gunreddychenna-lang/kalamkari-sarees-catalogue#readme",
+  "dependencies": {
+    "playwright": "^1.61.1"
   }
 }

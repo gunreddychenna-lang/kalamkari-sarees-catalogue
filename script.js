@@ -1,6 +1,17 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzAXbuROmepx2ZwMM3vyj3wOivE5EOVlbsn59KAosQZPn3qoB0mFIgVWu-TeuJht3j1ng/exec';
 const DEFAULT_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960"%3E%3Crect width="720" height="960" fill="%23F5EFE6"/%3E%3Ctext x="50%25" y="48%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="%23A67D5A"%3EImage+Not+Available%3C/text%3E%3C/svg%3E';
 
+function extractDriveFileId(url) {
+    if (!url || typeof url !== 'string') return '';
+    const match = url.match(/(?:id=|file\/d\/|\/d\/|\/document\/d\/)([\w-]+)/);
+    return match ? match[1] : '';
+}
+
+function buildCdnImageUrl(fileId, width = 1200) {
+    if (!fileId) return '';
+    return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+}
+
 function normalizeImageUrl(url) {
     if (!url || typeof url !== 'string') return '';
 
@@ -16,29 +27,64 @@ function normalizeImageUrl(url) {
         return trimmed;
     }
 
-    if (lower.includes('drive.google.com/thumbnail') || lower.includes('drive.google.com/uc?export=view&id=')) {
+    if (lower.includes('drive.google.com/thumbnail')) {
+        const fileId = extractDriveFileId(trimmed);
+        return fileId ? buildCdnImageUrl(fileId, 1200) : trimmed;
+    }
+
+    if (lower.includes('drive.google.com/uc?export=view&id=')) {
         return trimmed;
     }
 
     if (lower.includes('drive.google.com') || lower.includes('docs.google.com')) {
-        const idMatch = trimmed.match(/(?:id=|file\/d\/|\/d\/|\/document\/d\/)([\w-]+)/);
-        if (idMatch && idMatch[1]) {
-            return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        const fileId = extractDriveFileId(trimmed);
+        if (fileId) {
+            return `https://drive.google.com/uc?export=view&id=${fileId}`;
         }
     }
 
     try {
         const parsed = new URL(trimmed);
         if (parsed.hostname.includes('drive.google.com') || parsed.hostname.includes('docs.google.com')) {
-            const idMatch = trimmed.match(/(?:id=|file\/d\/|\/d\/|\/document\/d\/)([\w-]+)/);
-            if (idMatch && idMatch[1]) {
-                return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+            const fileId = extractDriveFileId(trimmed);
+            if (fileId) {
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
         }
         return trimmed;
     } catch (e) {
         return trimmed;
     }
+}
+
+function getProductImageSources(product, { detail = false } = {}) {
+    const width = detail ? 2000 : 800;
+    const fileId = product.imageId || extractDriveFileId(product.imageLink) || extractDriveFileId(product.thumbnail);
+    const cdnUrl = fileId ? buildCdnImageUrl(fileId, width) : '';
+    const sources = [
+        cdnUrl,
+        product.imageLink,
+        product.thumbnail,
+        DEFAULT_IMAGE
+    ];
+
+    return sources.filter((url, index) => url && sources.indexOf(url) === index);
+}
+
+function applyProductImage(img, product, options = {}) {
+    const sources = getProductImageSources(product, options);
+    let attempt = 0;
+
+    img.onerror = () => {
+        attempt += 1;
+        if (attempt < sources.length) {
+            img.src = sources[attempt];
+            return;
+        }
+        img.onerror = null;
+    };
+
+    img.src = sources[0] || DEFAULT_IMAGE;
 }
 
 function sortProductsByPrice(products) {
@@ -50,6 +96,8 @@ let allProducts = [];
 let filteredProducts = [];
 let wishlist = JSON.parse(localStorage.getItem('kalamkariWishlist')) || [];
 let currentProduct = null;
+let isDetailZoomed = false;
+let isOverlayZoomed = false;
 
 // DOM Elements
 const views = {
@@ -63,7 +111,7 @@ const elements = {
     wishlistGrid: document.getElementById('wishlist-grid'),
     spinner: document.getElementById('loading-spinner'),
     searchInput: document.getElementById('search-input'),
-    filterBtns: document.querySelectorAll('.filter-btn'),
+    filtersContainer: document.getElementById('category-filters') || document.querySelector('.category-filters'),
     wishlistCount: document.getElementById('wishlist-count'),
     viewWishlistBtn: document.getElementById('view-wishlist-btn'),
     backToCatalogueBtn: document.getElementById('back-to-catalogue'),
@@ -72,6 +120,10 @@ const elements = {
     
     // Details View Elements
     detailImage: document.getElementById('detail-image'),
+    detailImageSection: document.querySelector('.product-image-section'),
+    overlay: document.getElementById('image-overlay'),
+    overlayImage: document.getElementById('overlay-image'),
+    overlayClose: document.getElementById('overlay-close'),
     detailCode: document.getElementById('detail-code'),
     detailTitle: document.getElementById('detail-title'),
     detailDescription: document.getElementById('detail-description'),
@@ -86,6 +138,7 @@ async function init() {
     updateWishlistCount();
     setupEventListeners();
     await fetchProducts();
+    renderFilterButtons();
 }
 
 // Fetch Data
@@ -96,19 +149,23 @@ async function fetchProducts() {
         
         // Clean and prepare data
         allProducts = data.map(item => {
+            const imageId = String(item['image id'] || item.imageId || '').trim();
             const rawImageLink = String(item['image link'] || item.imageLink || '').trim();
-            const rawThumbnail = String(item.thumbnail || item[''] || rawImageLink).trim();
-            const imageLink = normalizeImageUrl(rawImageLink);
-            const thumbnail = normalizeImageUrl(rawThumbnail) || imageLink;
-            const primaryImage = thumbnail || imageLink || DEFAULT_IMAGE;
+            const rawThumbnail = String(item.thumbnail || item[''] || '').trim();
+            const imageLink = normalizeImageUrl(rawImageLink) ||
+                (imageId ? `https://drive.google.com/uc?export=view&id=${imageId}` : '');
+            const thumbnail = (imageId ? buildCdnImageUrl(imageId, 800) : '') ||
+                normalizeImageUrl(rawThumbnail) ||
+                imageLink;
 
             return {
                 code: String(item.code || '').trim(),
                 fabric: String(item.fabric || 'Pure Silk').trim(),
                 price: Number(item.price) || 0,
                 qty: Number(item.qty) || 0,
-                imageLink: primaryImage,
-                thumbnail: primaryImage,
+                imageId,
+                imageLink,
+                thumbnail,
                 description: String(item.description || '').trim()
             };
         }).filter(item => item.code);
@@ -118,6 +175,7 @@ async function fetchProducts() {
         filteredProducts = sortProductsByPrice(allProducts);
 
         elements.spinner.style.display = 'none';
+        renderFilterButtons();
         renderProducts(filteredProducts, elements.productGrid);
         calculatePriceRanges();
     } catch (error) {
@@ -138,9 +196,12 @@ function renderProducts(products, container) {
     products.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        card.onclick = () => showProductDetails(product);
+        if (product.qty > 0) {
+            card.onclick = () => showProductDetails(product);
+        } else {
+            card.classList.add('sold-out');
+        }
 
-        const imageSrc = product.thumbnail || product.imageLink || DEFAULT_IMAGE;
         const formattedPrice = new Intl.NumberFormat('en-IN').format(product.price);
 
         const imageWrapper = document.createElement('div');
@@ -149,13 +210,16 @@ function renderProducts(products, container) {
         const img = document.createElement('img');
         img.alt = `${product.fabric} Saree`;
         img.loading = 'lazy';
-        img.src = imageSrc;
-        img.onerror = () => {
-            img.onerror = null;
-            img.src = DEFAULT_IMAGE;
-        };
+        applyProductImage(img, product);
 
         imageWrapper.appendChild(img);
+
+        if (product.qty <= 0) {
+            const badge = document.createElement('span');
+            badge.className = 'sold-out-badge';
+            badge.textContent = 'SOLD OUT';
+            imageWrapper.appendChild(badge);
+        }
 
         const info = document.createElement('div');
         info.className = 'product-info';
@@ -184,15 +248,74 @@ function showView(viewName) {
     }
 }
 
+function renderFilterButtons() {
+    elements.filtersContainer = elements.filtersContainer || document.getElementById('category-filters') || document.querySelector('.category-filters');
+    if (!elements.filtersContainer) return;
+
+    const fabricMap = new Map();
+    allProducts.forEach(product => {
+        const fabric = product.fabric ? product.fabric.trim() : 'Unknown';
+        if (!fabric) return;
+
+        const key = fabric.toLowerCase().replace(/\s+/g, ' ').trim();
+        if (!fabricMap.has(key)) {
+            fabricMap.set(key, { label: fabric, prices: [] });
+        }
+        fabricMap.get(key).prices.push(product.price || 0);
+    });
+
+    elements.filtersContainer.innerHTML = '';
+
+    const allButton = document.createElement('button');
+    allButton.className = 'filter-btn active';
+    allButton.dataset.filter = 'all';
+    allButton.innerHTML = '<span class="filter-title">ALL SAREES</span>';
+    elements.filtersContainer.appendChild(allButton);
+
+    fabricMap.forEach((entry, key) => {
+        const prices = entry.prices.filter(price => price > 0);
+        const priceText = prices.length > 0 ? formatPriceRange(prices) : 'Price Unavailable';
+
+        const button = document.createElement('button');
+        button.className = 'filter-btn';
+        button.dataset.filter = key;
+        button.innerHTML = `
+            <span class="filter-title">${entry.label.toUpperCase()}</span>
+            <span class="filter-price">${priceText}</span>
+        `;
+        elements.filtersContainer.appendChild(button);
+    });
+
+    attachFilterHandlers();
+}
+
+function attachFilterHandlers() {
+    if (!elements.filtersContainer) return;
+    const buttons = elements.filtersContainer.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterAndSearchProducts();
+        });
+    });
+}
+
+function formatPriceRange(prices) {
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const formatOpts = { style: 'currency', currency: 'INR', maximumFractionDigits: 0 };
+    const formattedMin = new Intl.NumberFormat('en-IN', formatOpts).format(minPrice);
+    const formattedMax = new Intl.NumberFormat('en-IN', formatOpts).format(maxPrice);
+    return minPrice === maxPrice ? formattedMin : `${formattedMin} to ${formattedMax}`;
+}
+
 function showProductDetails(product) {
     currentProduct = product;
+    isDetailZoomed = false;
+    updateDetailZoom();
     
-    const detailImageSrc = product.thumbnail || product.imageLink || DEFAULT_IMAGE;
-    elements.detailImage.src = detailImageSrc;
-    elements.detailImage.onerror = () => {
-        elements.detailImage.onerror = null;
-        elements.detailImage.src = DEFAULT_IMAGE;
-    };
+    applyProductImage(elements.detailImage, product, { detail: true });
     
     elements.detailCode.textContent = `Code: ${product.code}`;
     elements.detailTitle.textContent = `${product.fabric} Saree`;
@@ -206,9 +329,83 @@ function showProductDetails(product) {
     
     elements.detailPrice.textContent = new Intl.NumberFormat('en-IN').format(product.price);
     elements.detailFabricHighlight.textContent = product.fabric;
+    elements.detailImage.title = 'Click to zoom';
     
     updateWishlistButtonState();
     showView('details');
+}
+
+function updateDetailZoom() {
+    if (!elements.detailImageSection || !elements.detailImage) return;
+
+    if (isDetailZoomed) {
+        elements.detailImageSection.classList.add('zoom-active');
+        elements.detailImage.style.transformOrigin = '50% 50%';
+    } else {
+        elements.detailImageSection.classList.remove('zoom-active');
+        elements.detailImage.style.transformOrigin = '50% 50%';
+    }
+}
+
+function toggleDetailZoom() {
+    if (!currentProduct) return;
+    isDetailZoomed = !isDetailZoomed;
+    updateDetailZoom();
+}
+
+function moveDetailZoom(event) {
+    if (!isDetailZoomed || !elements.detailImage) return;
+    const rect = elements.detailImage.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    elements.detailImage.style.transformOrigin = `${x}% ${y}%`;
+}
+
+function openFullScreenImage(product) {
+    if (!product || !elements.overlay || !elements.overlayImage) return;
+
+    applyProductImage(elements.overlayImage, product, { detail: true });
+    elements.overlayImage.style.transform = 'scale(1)';
+    elements.overlayImage.style.transformOrigin = '50% 50%';
+    elements.overlayImage.style.cursor = 'zoom-in';
+    elements.overlay.classList.remove('hidden');
+    isOverlayZoomed = false;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeOverlay() {
+    if (!elements.overlay) return;
+
+    elements.overlay.classList.add('hidden');
+    if (elements.overlayImage) {
+        elements.overlayImage.style.transform = 'scale(1)';
+        elements.overlayImage.style.transformOrigin = '50% 50%';
+        elements.overlayImage.style.cursor = 'zoom-in';
+    }
+    isOverlayZoomed = false;
+    document.body.style.overflow = '';
+}
+
+function toggleOverlayZoom() {
+    if (!elements.overlayImage) return;
+
+    isOverlayZoomed = !isOverlayZoomed;
+    if (isOverlayZoomed) {
+        elements.overlayImage.style.transform = 'scale(2.5)';
+        elements.overlayImage.style.cursor = 'zoom-out';
+    } else {
+        elements.overlayImage.style.transform = 'scale(1)';
+        elements.overlayImage.style.transformOrigin = '50% 50%';
+        elements.overlayImage.style.cursor = 'zoom-in';
+    }
+}
+
+function moveOverlayZoom(event) {
+    if (!isOverlayZoomed || !elements.overlayImage) return;
+    const rect = elements.overlayImage.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    elements.overlayImage.style.transformOrigin = `${x}% ${y}%`;
 }
 
 // Calculate and display price ranges for categories
@@ -334,13 +531,20 @@ function setupEventListeners() {
     elements.addToWishlistBtn.addEventListener('click', toggleWishlist);
     
     elements.searchInput.addEventListener('input', filterAndSearchProducts);
-    
-    elements.filterBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            elements.filterBtns.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            filterAndSearchProducts();
+    elements.detailImage.addEventListener('click', () => openFullScreenImage(currentProduct));
+    if (elements.overlay) {
+        elements.overlay.addEventListener('click', event => {
+            if (event.target === elements.overlay || event.target === elements.overlayClose) {
+                closeOverlay();
+            }
         });
+    }
+    if (elements.overlayImage) {
+        elements.overlayImage.addEventListener('click', toggleOverlayZoom);
+        elements.overlayImage.addEventListener('mousemove', moveOverlayZoom);
+    }
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeOverlay();
     });
 }
 
