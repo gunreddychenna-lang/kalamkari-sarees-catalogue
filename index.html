@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalamkari Sarees</title>
+    <meta name="description" content="Discover premium Kalamkari silk sarees online. Authentic hand-painted collections.">
+    <!-- Google Fonts for traditional aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <h1>Kalamkari Sarees</h1>
+            <div class="header-actions">
+                <button id="view-wishlist-btn" class="wishlist-trigger">
+                    Wishlist (<span id="wishlist-count">0</span>)
+                </button>
+            </div>
+        </div>
+        <div class="search-bar-container">
+            <input type="text" id="search-input" placeholder="Search fabric, code, price...">
+        </div>
+        <div class="category-filters">
+            <button class="filter-btn active" data-filter="all">
+                <span class="filter-title">ALL SAREES</span>
+            </button>
+            <button class="filter-btn" data-filter="pure kanchipuram silk">
+                <span class="filter-title">PURE KANCHIPURAM SILK</span>
+                <span class="filter-price" id="price-kanchipuram">Loading...</span>
+            </button>
+            <button class="filter-btn" data-filter="pure ikkat  silk">
+                <span class="filter-title">PURE IKKAT SILK</span>
+                <span class="filter-price" id="price-ikkat">Loading...</span>
+            </button>
+            <button class="filter-btn" data-filter="pure gadwal silk">
+                <span class="filter-title">PURE GADWAL SILK</span>
+                <span class="filter-price" id="price-gadwal">Loading...</span>
+            </button>
+            <button class="filter-btn" data-filter="pure tussar silk">
+                <span class="filter-title">PURE TUSSAR SILK</span>
+                <span class="filter-price" id="price-tussar">Loading...</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Catalogue View -->
+        <section id="catalogue-view" class="view active">
+            <div id="loading-spinner" class="spinner">Loading collection...</div>
+            <div id="product-grid" class="product-grid">
+                <!-- Products will be injected here -->
+            </div>
+        </section>
+
+        <!-- Product Details View -->
+        <section id="product-details-view" class="view">
+            <div class="back-nav">
+                <button id="back-to-catalogue" class="back-btn">&larr; Back to Catalogue</button>
+            </div>
+            
+            <div class="product-details-container">
+                <div class="product-image-section">
+                    <img id="detail-image" src="" alt="Saree Image">
+                </div>
+                
+                <div class="product-info-section">
+                    <div class="product-tags">
+                        <span class="tag code-tag" id="detail-code">Code: ---</span>
+                        <span class="tag stock-tag">In Stock</span>
+                    </div>
+                    
+                    <h2 id="detail-title" class="detail-title">Pure Silk Saree</h2>
+                    
+                    <p id="detail-description" class="product-description"></p>
+                    
+                    <div class="price-card">
+                        <span class="price-label">PRICE</span>
+                        <div class="price-wrapper">
+                            <span class="currency">&#8377;</span>
+                            <span id="detail-price" class="amount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-highlights">
+                        <h3 class="highlights-title">PRODUCT HIGHLIGHTS</h3>
+                        <ul class="highlights-list">
+                            <li>
+                                <span class="icon">🎨</span>
+                                <p><strong>100% Authentic Fabric:</strong> <span id="detail-fabric-highlight">Premium finish.</span></p>
+                            </li>
+                            <li>
+                                <span class="icon">✨</span>
+                                <p><strong>Traditional Craftsmanship:</strong> Elegant design with intricate details.</p>
+                            </li>
+                            <li>
+                                <span class="icon">🚚</span>
+                                <p><strong>Express Delivery:</strong> Packed carefully and shipped safely directly to your doorstep.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="add-to-wishlist-btn" class="primary-btn wishlist-btn">
+                            <span class="btn-icon">❤️</span> <span id="wishlist-btn-text">Add to Wishlist</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wishlist View -->
+        <section id="wishlist-view" class="view">
+             <div class="back-nav">
+                <button id="back-from-wishlist" class="back-btn">&larr; Back to Catalogue</button>
+            </div>
+            <h2 class="section-title">Your Wishlist</h2>
+            <div id="wishlist-grid" class="product-grid">
+                <!-- Wishlist items will be injected here -->
+            </div>
+            <div id="empty-wishlist" class="empty-state">
+                <p>Your wishlist is currently empty.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Kalamkari Sarees. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js?v=2"></script>
+</body>
+</html>

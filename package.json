@@ -1,0 +1,10 @@
+{
+  "name": "kalamkari-sarees",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static preview server for the Kalamkari Sarees landing page.",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "start": "python -m http.server 8000"
+  }
+}
