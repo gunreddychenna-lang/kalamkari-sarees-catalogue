@@ -5,131 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalamkari Sarees</title>
     <meta name="description" content="Discover premium Kalamkari silk sarees online. Authentic hand-painted collections.">
-    <!-- Google Fonts for traditional aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-    <header class="main-header">
-        <div class="header-container">
-            <div>
-                <h1>Kalamkari Sarees</h1>
-                <div class="hero-copy">
-                    <div class="hero-badges">
-                        <span>Pure Silk</span>
-                        <span>Artisan Made</span>
-                        <span>Fast Shipping</span>
-                    </div>
+
+<header class="main-header">
+    <div class="header-container">
+        <div>
+            <h1>Kalamkari Sarees</h1>
+            <div class="hero-copy">
+                <div class="hero-badges">
+                    <span>Pure Silk</span>
+                    <span>Artisan Made</span>
+                    <span>Fast Shipping</span>
                 </div>
-            </div>
-            <div class="header-actions">
-                <button id="view-wishlist-btn" class="wishlist-trigger">
-                    Wishlist (<span id="wishlist-count">0</span>)
-                </button>
             </div>
         </div>
-        <div class="search-bar-container">
-            <input type="text" id="search-input" placeholder="Search fabric, code, price...">
-        </div>
-        <div id="category-filters" class="category-filters"></div>
-    </header>
-
-    <main class="container">
-        <!-- Catalogue View -->
-        <section id="catalogue-view" class="view active">
-            <div id="loading-spinner" class="spinner">Loading collection...</div>
-            <div id="product-grid" class="product-grid">
-                <!-- Products will be injected here -->
-            </div>
-        </section>
-
-        <!-- Product Details View -->
-        <section id="product-details-view" class="view">
-            <div class="back-nav">
-                <button id="back-to-catalogue" class="back-btn">&larr; Back to Catalogue</button>
-            </div>
-            
-            <div class="product-details-container">
-                <div class="product-image-section">
-                    <img id="detail-image" src="" alt="Saree Image">
-                </div>
-                
-                <div class="product-info-section">
-                    <div class="product-tags">
-                        <span class="tag code-tag" id="detail-code">Code: ---</span>
-                        <span class="tag stock-tag">In Stock</span>
-                    </div>
-                    
-                    <h2 id="detail-title" class="detail-title">Pure Silk Saree</h2>
-                    
-                    <p id="detail-description" class="product-description"></p>
-                    
-                    <div class="price-card">
-                        <span class="price-label">PRICE</span>
-                        <div class="price-wrapper">
-                            <span class="currency">&#8377;</span>
-                            <span id="detail-price" class="amount">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-highlights">
-                        <h3 class="highlights-title">PRODUCT HIGHLIGHTS</h3>
-                        <ul class="highlights-list">
-                            <li>
-                                <span class="icon">🎨</span>
-                                <p><strong>100% Authentic Fabric:</strong> <span id="detail-fabric-highlight">Premium finish.</span></p>
-                            </li>
-                            <li>
-                                <span class="icon">✨</span>
-                                <p><strong>Traditional Craftsmanship:</strong> Elegant design with intricate details.</p>
-                            </li>
-                            <li>
-                                <span class="icon">🚚</span>
-                                <p><strong>Express Delivery:</strong> Packed carefully and shipped safely directly to your doorstep.</p>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button id="add-to-wishlist-btn" class="primary-btn wishlist-btn">
-                            <span class="btn-icon">❤️</span> <span id="wishlist-btn-text">Add to Wishlist</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Wishlist View -->
-        <section id="wishlist-view" class="view">
-             <div class="back-nav">
-                <button id="back-from-wishlist" class="back-btn">&larr; Back to Catalogue</button>
-            </div>
-            <h2 class="section-title">Your Wishlist</h2>
-            <div id="wishlist-grid" class="product-grid">
-                <!-- Wishlist items will be injected here -->
-            </div>
-            <div id="empty-wishlist" class="empty-state">
-                <p>Your wishlist is currently empty.</p>
-            </div>
-        </section>
-    </main>
-
-    <div id="image-overlay" class="image-overlay hidden" role="dialog" aria-modal="true">
-        <div class="overlay-backdrop"></div>
-        <div class="overlay-content">
-            <button id="overlay-close" class="overlay-close" aria-label="Close image overlay">×</button>
-            <img id="overlay-image" alt="Zoomed Saree Image">
-            <span class="overlay-hint">Click image to zoom, move mouse to pan, Esc to close.</span>
+        <div class="header-actions">
+            <button id="view-wishlist-btn" class="wishlist-trigger">
+                Wishlist (<span id="wishlist-count">0</span>)
+            </button>
         </div>
     </div>
+    <div class="search-bar-container">
+        <input type="text" id="search-input" placeholder="Search fabric, code, price...">
+    </div>
+    <div id="category-filters" class="category-filters"></div>
+</header>
 
-    <footer class="main-footer">
-        <p>&copy; 2026 Kalamkari Sarees. All rights reserved.</p>
-    </footer>
+<main class="container">
+    <section id="catalogue-view" class="view active">
+        <div id="loading-spinner" class="spinner">Loading collection...</div>
+        <div id="product-grid" class="product-grid"></div>
+    </section>
 
-    <script src="script.js?v=5"></script>
-<script defer src="/_vercel/insights/script.js"></script>
+    <section id="product-details-view" class="view">
+        <div class="back-nav">
+            <button id="back-to-catalogue" class="back-btn">&larr; Back to Catalogue</button>
+        </div>
+
+        <div class="product-details-container">
+            <div class="product-image-section">
+                <img id="detail-image" src="" alt="Saree Image">
+            </div>
+            <div class="product-info-section">
+                <div class="product-tags">
+                    <span class="tag code-tag" id="detail-code">Code: ---</span>
+                    <span class="tag stock-tag">In Stock</span>
+                </div>
+                <h2 id="detail-title" class="detail-title">Pure Silk Saree</h2>
+                <p id="detail-description" class="product-description"></p>
+                <div class="price-card">
+                    <span class="price-label">PRICE</span>
+                    <div class="price-wrapper">
+                        <span class="currency">&#8377;</span>
+                        <span id="detail-price" class="amount">0</span>
+                    </div>
+                </div>
+                <div class="product-highlights">
+                    <h3 class="highlights-title">PRODUCT HIGHLIGHTS</h3>
+                    <ul class="highlights-list">
+                        <li><span class="icon">🎨</span><p><strong>100% Authentic Fabric:</strong> <span id="detail-fabric-highlight">Premium finish.</span></p></li>
+                        <li><span class="icon">✨</span><p><strong>Traditional Craftsmanship:</strong> Elegant design with intricate details.</p></li>
+                        <li><span class="icon">🚚</span><p><strong>Express Delivery:</strong> Packed carefully and shipped safely.</p></li>
+                    </ul>
+                </div>
+                <div class="action-buttons">
+                    <button id="add-to-wishlist-btn" class="primary-btn wishlist-btn">
+                        <span class="btn-icon">❤️</span> <span id="wishlist-btn-text">Add to Wishlist</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <section id="similar-products-section" class="similar-products-section" style="display: none;">
+            <h3 class="section-title">Similar Sarees</h3>
+            <div id="similar-products-grid" class="product-grid"></div>
+        </section>
+    </section>
+
+    <section id="wishlist-view" class="view">
+        <div class="back-nav"><button id="back-from-wishlist" class="back-btn">&larr; Back to Catalogue</button></div>
+        <h2 class="section-title">Your Wishlist</h2>
+        <div id="wishlist-grid" class="product-grid"></div>
+        <div id="empty-wishlist" class="empty-state"><p>Your wishlist is currently empty.</p></div>
+    </section>
+</main>
+
+<script>
+    window.addEventListener('load', () => { history.pushState({ appHome: true }, '', window.location.href); });
+    window.addEventListener('popstate', () => {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('catalogue-view').classList.add('active');
+        history.pushState({ appHome: true }, '', window.location.href);
+    });
+</script>
+<script src="script.js?v=5"></script>
 </body>
 </html>

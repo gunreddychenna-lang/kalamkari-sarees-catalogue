@@ -1164,3 +1164,27 @@ body.details-mode .wishlist-trigger {
         padding: 0 1rem;
     }
 }
+/* --- Fix the Saree Image Fitting --- */
+.product-image-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.product-image-section img {
+    width: 100%;
+    max-height: 80vh; /* Limits height so it doesn't push everything down too far */
+    object-fit: contain; /* Ensures the whole saree is visible and fits perfectly */
+    border-radius: 8px; 
+    background-color: #f9f9f9; 
+}
+
+/* --- Make sure Similar Sarees takes full width at the bottom --- */
+.similar-products-section {
+    width: 100%;
+    margin-top: 50px; 
+    padding-top: 30px;
+    border-top: 1px solid #e0e0e0;
+    clear: both;
+}
