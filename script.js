@@ -37,11 +37,9 @@ function normalizeImageUrl(url) {
         return fileId ? buildCdnImageUrl(fileId, 1200) : trimmed;
     }
 
-    // For all Google Drive URLs, extract the file ID and use CDN format
     if (lower.includes('drive.google.com') || lower.includes('docs.google.com')) {
         const fileId = extractDriveFileId(trimmed);
         if (fileId) {
-            // Use Google's CDN which is designed for embedding and has better CORS support
             return buildCdnImageUrl(fileId, 1200);
         }
     }
@@ -201,9 +199,16 @@ async function fetchProducts() {
                 };
         }).filter(item => item.code);
 
-        const sortProductsByPrice = products => [...products].sort((a, b) => (a.price || 0) - (b.price || 0));
         allProducts = sortProductsByPrice(allProducts);
         filteredProducts = sortProductsByPrice(allProducts);
+
+        // WISHLIST SYNC FIX: Update saved wishlist items with fresh sheet data
+        wishlist = wishlist.map(savedItem => {
+            const freshItem = allProducts.find(p => p.code === savedItem.code);
+            return freshItem || savedItem;
+        });
+        localStorage.setItem('kalamkariWishlist', JSON.stringify(wishlist));
+        updateWishlistCount();
 
         elements.spinner.style.display = 'none';
         renderFilterButtons();
@@ -258,7 +263,7 @@ function renderProducts(products, container) {
         info.innerHTML = `
             <h3 class="product-title">${product.fabric} Saree</h3>
             ${shortDescription ? `<p class="product-card-description">${shortDescription}</p>` : ''}
-            <div class="product-price">&#8377;${formattedPrice}</div>
+            <div class="product-price">₹${formattedPrice}</div>
         `;
 
         card.appendChild(imageWrapper);
@@ -267,17 +272,56 @@ function renderProducts(products, container) {
     });
 }
 
+// Render Similar Products
+// Render Similar Products with 30% Price Range fallback
+function renderSimilarProducts(currentProduct) {
+    const similarSection = document.getElementById('similar-products-section');
+    const similarContainer = document.getElementById('similar-products-grid');
+    if (!similarSection || !similarContainer) return;
+
+    // 1. Get items of the same fabric, excluding the current one
+    let similar = allProducts.filter(p => 
+        p.fabric.toLowerCase() === currentProduct.fabric.toLowerCase() && 
+        p.code !== currentProduct.code
+    );
+
+    // 2. LOGIC: Filter for products with a HIGHER price than the current one
+    // We sort them so the "next closest" higher price comes first
+    let higherPriced = similar
+        .filter(p => p.price > currentProduct.price)
+        .sort((a, b) => a.price - b.price);
+
+    // 3. Fallback: If no higher priced items, include similar priced items 
+    // (or 30% range as previously discussed)
+    if (higherPriced.length === 0) {
+        const minPrice = currentProduct.price * 0.7;
+        const maxPrice = currentProduct.price * 1.3;
+        higherPriced = allProducts.filter(p => 
+            p.code !== currentProduct.code && 
+            p.price >= minPrice && 
+            p.price <= maxPrice
+        ).sort((a, b) => a.price - b.price);
+    }
+
+    // 4. Render
+    if (higherPriced.length > 0) {
+        similarSection.style.display = 'block';
+        renderProducts(higherPriced.slice(0, 4), similarContainer);
+    } else {
+        similarSection.style.display = 'none';
+    }
+}
+
 // Navigation & Views
 function showView(viewName) {
     Object.values(views).forEach(v => v.classList.remove('active'));
     views[viewName].classList.add('active');
-    window.scrollTo(0, 0);
     
-    // Toggle header elements based on view
     if (viewName === 'details') {
         document.body.classList.add('details-mode');
     } else {
         document.body.classList.remove('details-mode');
+        window.scrollTo(0, 0);
     }
 }
 
@@ -365,7 +409,11 @@ function showProductDetails(product) {
     elements.detailImage.title = 'Click to zoom';
     
     updateWishlistButtonState();
+    renderSimilarProducts(product);
     showView('details');
+    
+    // Ensure we scroll to top of the details view (important for when clicking a similar product)
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
 
 function updateDetailZoom() {
@@ -445,7 +493,7 @@ function moveOverlayZoom(event) {
 function calculatePriceRanges() {
     const categories = {
         'kanchipuram': 'pure kanchipuram silk',
-        'ikkat': 'pure ikkat  silk', // preserving the double space typo in data
+        'ikkat': 'pure ikkat  silk', 
         'gadwal': 'pure gadwal silk',
         'tussar': 'pure tussar silk'
     };
@@ -492,7 +540,12 @@ function toggleWishlist() {
         wishlist.splice(index, 1);
     }
     
-    localStorage.setItem('kalamkariWishlist', JSON.stringify(wishlist));
+    try {
+        localStorage.setItem('kalamkariWishlist', JSON.stringify(wishlist));
+    } catch (e) {
+        console.error("Error saving wishlist to local storage", e);
+    }
+    
     updateWishlistCount();
     updateWishlistButtonState();
 }
@@ -537,7 +590,6 @@ function filterAndSearchProducts() {
             (product.fabric && product.fabric.toLowerCase().includes(searchTerm)) ||
             (product.price && product.price.toString().includes(searchTerm));
             
-        // The data has a typo with double spaces 'Pure ikkat  Silk', so doing an includes match or relaxing the check helps
         let matchesFilter = true;
         if (filterTerm !== 'all') {
             const prodFabric = product.fabric ? product.fabric.toLowerCase().replace(/\s+/g, ' ') : '';
