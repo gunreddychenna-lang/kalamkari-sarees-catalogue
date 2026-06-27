@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/gunreddychenna-lang/kalamkari-sarees-catalogue#readme",
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "playwright": "^1.61.1"
   }
 }
