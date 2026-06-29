@@ -9,7 +9,7 @@ function extractDriveFileId(url) {
 
 function buildCdnImageUrl(fileId, width = 1200) {
     if (!fileId) return '';
-    // FIXED: Added missing $ interpolation and switched to a high-reliability secure Drive thumbnail endpoint
+    // FIXED: Corrected interpolation syntax and upgraded to secure Drive thumbnail endpoint
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
 }
 
@@ -173,7 +173,6 @@ async function fetchProducts() {
                 normalizeImageUrl(rawThumbnail) ||
                 imageLink;
 
-            // Helper to parse price values robustly (strip commas/currency)
             function parsePrice(val) {
                 if (val === undefined || val === null || String(val).trim() === '') return 0;
                 const cleaned = String(val).replace(/[^0-9.\-]/g, '');
@@ -203,7 +202,6 @@ async function fetchProducts() {
         allProducts = sortProductsByPrice(allProducts);
         filteredProducts = sortProductsByPrice(allProducts);
 
-        // WISHLIST SYNC FIX: Update saved wishlist items with fresh sheet data
         wishlist = wishlist.map(savedItem => {
             const freshItem = allProducts.find(p => p.code === savedItem.code);
             return freshItem || savedItem;
@@ -279,18 +277,15 @@ function renderSimilarProducts(currentProduct) {
     const similarContainer = document.getElementById('similar-products-grid');
     if (!similarSection || !similarContainer) return;
 
-    // 1. Get items of the same fabric, excluding the current one
     let similar = allProducts.filter(p => 
         p.fabric.toLowerCase() === currentProduct.fabric.toLowerCase() && 
         p.code !== currentProduct.code
     );
 
-    // 2. Filter for products with a HIGHER price than the current one
     let higherPriced = similar
         .filter(p => p.price > currentProduct.price)
         .sort((a, b) => a.price - b.price);
 
-    // 3. Fallback: If no higher priced items, include similar priced items within 30% range
     if (higherPriced.length === 0) {
         const minPrice = currentProduct.price * 0.7;
         const maxPrice = currentProduct.price * 1.3;
@@ -301,7 +296,6 @@ function renderSimilarProducts(currentProduct) {
         ).sort((a, b) => a.price - b.price);
     }
 
-    // 4. Render
     if (higherPriced.length > 0) {
         similarSection.style.display = 'block';
         renderProducts(higherPriced.slice(0, 4), similarContainer);
@@ -486,7 +480,6 @@ function moveOverlayZoom(event) {
     elements.overlayImage.style.transformOrigin = `${x}% ${y}%`;
 }
 
-// Calculate and display price ranges for categories
 function calculatePriceRanges() {
     const categories = {
         'kanchipuram': 'pure kanchipuram silk',
@@ -547,7 +540,6 @@ function toggleWishlist() {
     updateWishlistButtonState();
 }
 
-// Update UI Counts
 function updateWishlistCount() {
     elements.wishlistCount.textContent = wishlist.length;
 }
@@ -578,20 +570,22 @@ function renderWishlist() {
 
 // Search and Filter
 function filterAndSearchProducts() {
-    const searchTerm = elements.searchInput.value.toLowerCase().trim();
+    // FIX: Safely check if searchInput exists in HTML before accessing .value
+    const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase().trim() : '';
     const activeFilterBtn = document.querySelector('.filter-btn.active');
     const filterTerm = activeFilterBtn ? activeFilterBtn.dataset.filter.toLowerCase().trim() : 'all';
     
     filteredProducts = allProducts.filter(product => {
-        const matchesSearch = 
+        const matchesSearch = !searchTerm ? true : (
             (product.code && product.code.toLowerCase().includes(searchTerm)) ||
             (product.fabric && product.fabric.toLowerCase().includes(searchTerm)) ||
-            (product.price && product.price.toString().includes(searchTerm));
+            (product.price && product.price.toString().includes(searchTerm))
+        );
             
         let matchesFilter = true;
         if (filterTerm !== 'all') {
-            const prodFabric = product.fabric ? product.fabric.toLowerCase().replace(/\s+/g, ' ') : '';
-            const fTerm = filterTerm.replace(/\s+/g, ' ');
+            const prodFabric = product.fabric ? product.fabric.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+            const fTerm = filterTerm.replace(/\s+/g, ' ').trim();
             matchesFilter = prodFabric.includes(fTerm);
         }
         
@@ -635,5 +629,5 @@ function setupEventListeners() {
     });
 }
 
-// Boot up app on DOM content loaded
+// Boot up
 document.addEventListener('DOMContentLoaded', init);
