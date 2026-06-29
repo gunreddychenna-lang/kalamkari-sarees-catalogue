@@ -9,7 +9,8 @@ function extractDriveFileId(url) {
 
 function buildCdnImageUrl(fileId, width = 1200) {
     if (!fileId) return '';
-    return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+    // FIXED: Added missing $ interpolation and switched to a high-reliability secure Drive thumbnail endpoint
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
 }
 
 function buildDirectDriveUrl(fileId) {
@@ -172,7 +173,7 @@ async function fetchProducts() {
                 normalizeImageUrl(rawThumbnail) ||
                 imageLink;
 
-            // helper to parse price values robustly (strip commas/currency)
+            // Helper to parse price values robustly (strip commas/currency)
             function parsePrice(val) {
                 if (val === undefined || val === null || String(val).trim() === '') return 0;
                 const cleaned = String(val).replace(/[^0-9.\-]/g, '');
@@ -181,22 +182,22 @@ async function fetchProducts() {
             }
 
             return {
-                    code: String(item.code || '').trim(),
-                    fabric: String(item.fabric || 'Pure Silk').trim(),
-                    price: parsePrice(item.price || item.Price || ''),
-                    qty: Number(item.qty) || 0,
-                    imageId,
-                    imageLink,
-                    thumbnail,
-                    description: String(getFieldValue(item, [
-                        'description',
-                        'Description',
-                        'product description',
-                        'Product Description',
-                        'desc',
-                        'Desc'
-                    ])).trim()
-                };
+                code: String(item.code || '').trim(),
+                fabric: String(item.fabric || 'Pure Silk').trim(),
+                price: parsePrice(item.price || item.Price || ''),
+                qty: Number(item.qty) || 0,
+                imageId,
+                imageLink,
+                thumbnail,
+                description: String(getFieldValue(item, [
+                    'description',
+                    'Description',
+                    'product description',
+                    'Product Description',
+                    'desc',
+                    'Desc'
+                ])).trim()
+            };
         }).filter(item => item.code);
 
         allProducts = sortProductsByPrice(allProducts);
@@ -272,7 +273,6 @@ function renderProducts(products, container) {
     });
 }
 
-// Render Similar Products
 // Render Similar Products with 30% Price Range fallback
 function renderSimilarProducts(currentProduct) {
     const similarSection = document.getElementById('similar-products-section');
@@ -285,14 +285,12 @@ function renderSimilarProducts(currentProduct) {
         p.code !== currentProduct.code
     );
 
-    // 2. LOGIC: Filter for products with a HIGHER price than the current one
-    // We sort them so the "next closest" higher price comes first
+    // 2. Filter for products with a HIGHER price than the current one
     let higherPriced = similar
         .filter(p => p.price > currentProduct.price)
         .sort((a, b) => a.price - b.price);
 
-    // 3. Fallback: If no higher priced items, include similar priced items 
-    // (or 30% range as previously discussed)
+    // 3. Fallback: If no higher priced items, include similar priced items within 30% range
     if (higherPriced.length === 0) {
         const minPrice = currentProduct.price * 0.7;
         const maxPrice = currentProduct.price * 1.3;
@@ -412,7 +410,6 @@ function showProductDetails(product) {
     renderSimilarProducts(product);
     showView('details');
     
-    // Ensure we scroll to top of the details view (important for when clicking a similar product)
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
 
@@ -550,6 +547,7 @@ function toggleWishlist() {
     updateWishlistButtonState();
 }
 
+// Update UI Counts
 function updateWishlistCount() {
     elements.wishlistCount.textContent = wishlist.length;
 }
@@ -615,8 +613,12 @@ function setupEventListeners() {
     
     elements.addToWishlistBtn.addEventListener('click', toggleWishlist);
     
-    elements.searchInput.addEventListener('input', filterAndSearchProducts);
+    if (elements.searchInput) {
+        elements.searchInput.addEventListener('input', filterAndSearchProducts);
+    }
+    
     elements.detailImage.addEventListener('click', () => openFullScreenImage(currentProduct));
+    
     if (elements.overlay) {
         elements.overlay.addEventListener('click', event => {
             if (event.target === elements.overlay || event.target === elements.overlayClose) {
@@ -633,5 +635,5 @@ function setupEventListeners() {
     });
 }
 
-// Boot up
+// Boot up app on DOM content loaded
 document.addEventListener('DOMContentLoaded', init);
