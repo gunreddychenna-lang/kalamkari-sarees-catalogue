@@ -243,7 +243,7 @@ function renderProducts(products, container) {
         imageWrapper.className = 'product-image-wrapper';
 
         const img = document.createElement('img');
-        img.alt = `${product.fabric} Saree`;
+        img.alt = product.fabric;
         img.loading = 'lazy';
         applyProductImage(img, product);
 
@@ -260,10 +260,10 @@ function renderProducts(products, container) {
         info.className = 'product-info';
         const shortDescription = product.description ? `${String(product.description).trim().slice(0, 120)}${product.description.length > 120 ? '...' : ''}` : '';
         info.innerHTML = `
-            <h3 class="product-title">${product.fabric} Saree</h3>
-            ${shortDescription ? `<p class="product-card-description">${shortDescription}</p>` : ''}
-            <div class="product-price">₹${formattedPrice}</div>
-        `;
+    <h3 class="product-title">${product.fabric}</h3>
+    ${shortDescription ? `<p class="product-card-description">${shortDescription}</p>` : ''}
+    <div class="product-price">₹${formattedPrice}</div>
+`;
 
         card.appendChild(imageWrapper);
         card.appendChild(info);
@@ -387,7 +387,7 @@ function showProductDetails(product) {
     applyProductImage(elements.detailImage, product, { detail: true });
     
     elements.detailCode.textContent = `Code: ${product.code}`;
-    elements.detailTitle.textContent = `${product.fabric} Saree`;
+    elements.detailTitle.textContent = product.fabric;
     
     if (product.description) {
         elements.detailDescription.textContent = product.description;
